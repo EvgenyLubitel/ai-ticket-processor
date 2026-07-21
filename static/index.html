@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-агент для обработки обращений</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f4f6f9;
+            color: #1e293b;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        textarea {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            box-sizing: border-box;
+            min-height: 120px;
+        }
+        button {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #4338ca;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8fafc;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .tag-complaint { background: #fee2e2; color: #b91c1c; }
+        .tag-question { background: #dbeafe; color: #1e40af; }
+        .tag-feedback { background: #dcfce7; color: #166534; }
+        .tag-other { background: #e2e8f0; color: #475569; }
+        .tag-technical { background: #fef3c7; color: #92400e; }
+        .tag-request { background: #e0e7ff; color: #3730a3; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>🤖 AI-агент для обработки обращений</h1>
+        <p>Введите текст обращения, и агент определит его тип, выделит ключевые пункты и определит тональность.</p>
+        <textarea id="inputText" placeholder="Например: У меня не работает приложение, постоянно вылетает...">У меня не работает приложение, постоянно вылетает при открытии заказов. Уже третий раз за день! Срочно почините!</textarea>
+        <button onclick="sendRequest()">Отправить</button>
+        <div id="result">
+            <p style="color: #94a3b8;">Ответ появится здесь...</p>
+        </div>
+    </div>
+
+    <script>
+        async function sendRequest() {
+            const text = document.getElementById('inputText').value;
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<p>⏳ Загрузка...</p>';
+
+            try {
+                const response = await fetch('/process', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text, user_id: 'web' })
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    const r = data.result;
+                    const sentimentEmoji = r.sentiment === 'positive' ? '😊' : (r.sentiment === 'negative' ? '😠' : '😐');
+                    const typeTag = `<span class="tag tag-${r.type}">${r.type}</span>`;
+                    const keyPointsHtml = r.key_points.map(p => `<li>${p}</li>`).join('');
+
+                    resultDiv.innerHTML = `
+                        <h3>📊 Результат</h3>
+                        <p><strong>Тип:</strong> ${typeTag}</p>
+                        <p><strong>Уверенность:</strong> ${(r.confidence * 100).toFixed(0)}%</p>
+                        <p><strong>Тональность:</strong> ${sentimentEmoji} ${r.sentiment}</p>
+                        <p><strong>📝 Краткое содержание:</strong><br>${r.summary}</p>
+                        <p><strong>🔑 Ключевые пункты:</strong></p>
+                        <ul>${keyPointsHtml}</ul>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p style="color: red;">❌ Ошибка: ${data.error}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">❌ Не удалось соединиться с сервером. Убедитесь, что API запущен.</p>`;
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>

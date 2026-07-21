@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  ai-agent:
+    build: .
+    container_name: ai-ticket-processor
+    ports:
+      - "8000:8000"
+    environment:
+      - AITUNEL_API_KEY=${AITUNEL_API_KEY}  # Если у вас есть ключ, можно передать
+      - AITUNEL_BASE_URL=https://api.aitunel.com/v1
+      - AITUNEL_MODEL=gpt-4o-mini
+    volumes:
+      - ./data:/app/data   # Для сохранения истории обращений на хост-машине
+    restart: unless-stopped
