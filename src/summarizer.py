@@ -1,7 +1,7 @@
 import json
 import os
 import httpx
-from src.models import SummarizedTicket
+from models import SummarizedTicket
 
 class TicketSummarizer:
     def __init__(self, model: str = "gpt-4o-mini"):

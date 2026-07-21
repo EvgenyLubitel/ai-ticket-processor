@@ -1,14 +1,29 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles  # 🆕
+from fastapi.responses import FileResponse    # 🆕
 from pydantic import BaseModel
 from typing import Optional
-from src.agent import TicketProcessor
-from src.models import TicketInput
+import sys
+import os
+
+# Добавляем путь к src, чтобы импорты работали
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from agent import TicketProcessor
+from models import TicketInput
 
 app = FastAPI(
     title="AI-агент для обработки обращений",
     description="Классификация и суммаризация текстовых обращений",
     version="1.0.0"
 )
+
+# 🆕 Монтируем папку static для обслуживания статичных файлов
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# 🆕 Корневой маршрут для веб-интерфейса
+@app.get("/")
+def serve_index():
+    return FileResponse("static/index.html")
 
 processor = TicketProcessor()
 
@@ -21,18 +36,7 @@ class ProcessResponse(BaseModel):
     result: dict
     error: Optional[str] = None
 
-@app.get("/")
-def read_root():
-    return {
-        "service": "AI-агент для обработки обращений",
-        "status": "running",
-        "endpoints": [
-            "/process - POST - обработка текста",
-            "/health - GET - проверка статуса",
-            "/docs - GET - документация Swagger"
-        ]
-    }
-
+# ... остальные эндпоинты (/health, /process) остаются без изменений ...
 @app.get("/health")
 def health():
     return {"status": "ok"}
@@ -45,9 +49,7 @@ def process(request: ProcessRequest):
             user_id=request.user_id or "api",
             source="api"
         )
-        
         result = processor.process(ticket_input)
-        
         return ProcessResponse(
             success=True,
             result=result.structured

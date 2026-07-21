@@ -1,7 +1,7 @@
 import json
 import os
 import httpx
-from src.models import TicketType, ClassifiedTicket
+from models import TicketType, ClassifiedTicket
 
 class TicketClassifier:
     def __init__(self, model: str = "gpt-4o-mini"):

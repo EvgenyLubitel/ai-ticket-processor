@@ -1,6 +1,6 @@
-from src.models import TicketInput, TicketOutput, TicketStatus
-from src.classifier import TicketClassifier
-from src.summarizer import TicketSummarizer
+from models import TicketInput, TicketOutput, TicketStatus
+from classifier import TicketClassifier
+from summarizer import TicketSummarizer
 from datetime import datetime
 import json
 import os
